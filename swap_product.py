@@ -25,14 +25,13 @@ def crop(image_data: bytes) -> bytes:
     else:
         new_size = 650, 400
     image.thumbnail(new_size)
-    exif = image.info['exif']
+    exif = image.info['exif'] if 'exif' in image.info else None
     byte_array = io.BytesIO()
-    image.save(byte_array, format='jpeg', exif=exif)
+    if exif:
+        image.save(byte_array, format='jpeg', exif=exif)
+    else:
+        image.save(byte_array, format='jpeg')
     return byte_array.getvalue()
-
-
-def rotate_right(image_data: bytes):
-    pass
 
 
 def remove_background(image: bytes) -> bytes:
@@ -44,6 +43,7 @@ def remove_background(image: bytes) -> bytes:
         headers={'X-Api-Key': REMOVE_BG_TOKEN},
     )
     if response.status_code == requests.codes.ok:
+        logging.info(f'Successfully removed background')
         return response.content
     else:
         logging.error(f"Remove background error: {response.status_code}, {response.text}")
@@ -67,7 +67,7 @@ class SwapProduct:
             return None
         self._added_originals.add(image)
         image = crop(image)
-        # image = remove_background(image)
+        image = remove_background(image)
         return image
 
     def set_front_image(self, image: bytes):

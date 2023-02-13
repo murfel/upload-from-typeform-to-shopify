@@ -155,8 +155,6 @@ def typeform_swap_products(num_results: int, since='2023-02-02T18:04:07Z'):
 
     responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, since=since)
     for response in responses_dict['items']:
-        if response['token'] != 'hh8xcof1u6c7h8hhn8j68s9sxdt1vaqj':
-            continue
         logging.info(f"'Parsing response submitted at {response['submitted_at']}', response token {response['token']}")
         swap_product = SwapProduct()
         for answer in tqdm(response['answers']):
@@ -210,8 +208,11 @@ if __name__ == '__main__':
 
 """
 - background remover
-    - accidental rotate?
     - heic to jpeg
+    - crop white space after background removal
+        (need to preserve relative image size),
+        crop front/back by least size allowed by front/back picture
+        crop size/brand independently
 
 - Do not upload same typeform images
 
