@@ -25,8 +25,9 @@ def crop(image_data: bytes) -> bytes:
     else:
         new_size = 650, 400
     image.thumbnail(new_size)
+    exif = image.info['exif']
     byte_array = io.BytesIO()
-    image.save(byte_array, format='jpeg')
+    image.save(byte_array, format='jpeg', exif=exif)
     return byte_array.getvalue()
 
 
@@ -35,6 +36,7 @@ def rotate_right(image_data: bytes):
 
 
 def remove_background(image: bytes) -> bytes:
+    # NB: removes EXIF tags and other image meta-data
     response = requests.post(
         'https://api.remove.bg/v1.0/removebg',
         files={'image_file': io.BytesIO(image)},
