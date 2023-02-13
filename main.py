@@ -215,10 +215,15 @@ if __name__ == '__main__':
 
 - Do not upload same typeform images
 
+- discriminate by email moderator/swapper
+- coin calulator: 1.2 for material everywhere
+- swapper: customer id, find by emial
+- weight: average
 
 
+- photos allowed (for Shopify) .png, .gif or .jpg (.jpeg works) (me??)
 
-- photos allowed (for Shopify) .png, .gif or .jpg (.jpeg works)
+Future:
 - email / whatapp
 - instagram stories
 """
