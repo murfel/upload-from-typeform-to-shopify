@@ -48,6 +48,7 @@ VENDOR_IMAGE_FIELD_ID = config['vendor_image_question_id']
 ADDITIONAL_TEXT_FIELD_ID = config['additional_text_question_id']
 EMAIL_FIELD_ID = config['email_question_id']
 
+MODERATOR_EMAIL = 'moderator@dontshopswap.co.uk'
 
 def calc_price_from_coins(coins: int):
     if coins > 1000:
@@ -196,9 +197,10 @@ def main():
         coin_price = 100
 
         image_list = product.get_all_images()
+        is_p2p = (product.email != MODERATOR_EMAIL)
 
         upload_product(brand, colour, pattern, item_type, size, product.additional_text, coin_price,
-                       image_list)
+                       image_list, is_p2p)
 
 
 if __name__ == '__main__':
