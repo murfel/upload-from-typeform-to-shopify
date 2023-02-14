@@ -59,7 +59,7 @@ def calc_price_from_coins(coins: int):
     return coins / 50 + 2
 
 
-def upload_product(brand, colour, pattern, item_type, size, description, coin_price: int,
+def upload_product(brand, colour, pattern, item_type, weight_lb, size, description, coin_price: int,
                    images_bytes_list: List[bytes], is_p2p=True):
     # session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
     # shopify.ShopifyResource.activate_session(session)
@@ -101,7 +101,7 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
         'coin_price_type': 'purple',
         'variants': [  # TODO(me)
             {
-                'weight': 0.1,  # TODO: ask Lydia
+                'weight': weight_lb,
                 'weight_unit': 'lb',
                 'price': price,
                 'taxable': True,
@@ -225,7 +225,14 @@ def main():
         image_list = product.get_all_images()
         is_p2p = (product.email != MODERATOR_EMAIL)
 
-        upload_product(brand, colour, pattern, item_type, size, product.additional_text, coin_price,
+        weight_lb = SwapProduct.DEFAULT_WEIGHT
+        if item_type.lower() in SwapProduct.ITEM_TYPE_TO_WEIGHT.keys():
+            weight_lb = SwapProduct.ITEM_TYPE_TO_WEIGHT[item_type.lower()]
+        else:
+            logging.error(f'No weight for item type: {item_type.lower()}, '
+                          f'using default: {SwapProduct.DEFAULT_WEIGHT} lb')
+
+        upload_product(brand, colour, pattern, item_type, weight_lb, size, product.additional_text, coin_price,
                        image_list, is_p2p)
 
 

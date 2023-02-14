@@ -50,6 +50,29 @@ def remove_background(image: bytes) -> bytes:
 
 
 class SwapProduct:
+    ITEM_TYPE_TO_WEIGHT = {  # in lb
+        'top': .5,
+        't-shirt': .5,
+        'shorts': .5,
+        'skirt': .5,
+
+        'dress': .8,
+        'jumper': .8,
+        'sweatshirt': .8,
+        'hoodie': .8,
+        'jeans': .8,
+        'trousers': .8,
+        'co-ord': .8,
+
+        'dungarees': 1,
+
+        'jacket': 1.2,
+
+        'coat': 2,
+    }
+
+    DEFAULT_WEIGHT = .8
+
     def __init__(self):
         self._added_originals: Set[bytes] = set()
         self._front_image: Optional[bytes] = None
