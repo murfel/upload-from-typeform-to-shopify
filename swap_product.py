@@ -29,7 +29,7 @@ def crop(image_data: bytes) -> bytes:
         image.save(byte_array, format=image.format, exif=exif)
     else:
         image.save(byte_array, format=image.format)
-    logging.info('Successfully cropped, image format: {image.format}')
+    logging.info(f'Successfully cropped, image format: {image.format}')
     return byte_array.getvalue()
 
 
