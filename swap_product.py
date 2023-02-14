@@ -28,9 +28,10 @@ def crop(image_data: bytes) -> bytes:
     exif = image.info['exif'] if 'exif' in image.info else None
     byte_array = io.BytesIO()
     if exif:
-        image.save(byte_array, format='jpeg', exif=exif)
+        image.save(byte_array, format=image.format, exif=exif)
     else:
-        image.save(byte_array, format='jpeg')
+        image.save(byte_array, format=image.format)
+    logging.info('Successfully cropped, image format: {image.format}')
     return byte_array.getvalue()
 
 
