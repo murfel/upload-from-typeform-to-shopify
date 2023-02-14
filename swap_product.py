@@ -1,12 +1,10 @@
 import io
 import logging
-
 from typing import Optional, List, Set
 
-from PIL import Image
 import PIL
-
 import requests
+from PIL import Image
 
 REMOVE_BG_TOKEN = 'piFNEtB5QDWAcUt7hEFmmpBS'
 
@@ -94,31 +92,3 @@ class SwapProduct:
         if self._brand_image:
             images.append(self._brand_image)
         return images
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

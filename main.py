@@ -1,20 +1,12 @@
 import base64
-import io
 import json
 import logging
-import os
-import pdb
-from typing import List, Optional
+from typing import List
 
-import PIL.Image
 import requests
-
-from removebg import RemoveBg
 import shopify
 from tqdm import tqdm
 from typeform import Typeform
-
-from PIL import Image
 
 from swap_product import SwapProduct
 
@@ -82,7 +74,8 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
             description += '<br/><br/>'
         description += 'This item has been remotely uploaded by another swapper, ' \
                        'it may arrive separately from the rest of your order.'
-    tags = ', '.join([brand, colour, item_type, size[len('Size '):]] + ['p2p'] if remote_swapper else [])  # TODO: ask Lydia
+    tags = ', '.join(
+        [brand, colour, item_type, size[len('Size '):]] + ['p2p'] if remote_swapper else [])  # TODO: ask Lydia
 
     images = []
     for image_bytes in images_bytes_list:
