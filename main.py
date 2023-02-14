@@ -205,6 +205,7 @@ if __name__ == '__main__':
 """
 - background remover
     - heic to jpeg
+        if response['token'] != '35b05rgs653ismib35bqyadr61bjxe0g': continue
     - crop white space after background removal
         (need to preserve relative image size),
         crop front/back by least size allowed by front/back picture
