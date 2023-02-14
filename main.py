@@ -14,17 +14,23 @@ from swap_product import SwapProduct
 # PASSWORD = 'science'
 # API_SECRET = '545b34fe770840329eff189243499c32'
 
-SHOP_NAME = 'rocket-science-biz-development'
+SHOP_NAME = 'dont-shop-swap'
 SHOP_URL = SHOP_NAME + '.myshopify.com'
-ACCESS_TOKEN = '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'
+ACCESS_TOKEN = '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'
 API_VERSION = '2022-10'
 
 TYPEFORM_TOKEN = 'tfp_Szdsy8sB4vdevcFrxbTZ3ZrnSpVnNTx2wWLGPCagJEF_3mQ2r4PUvaDeYh'
 
-# TODO: before using with a new shop, set a proper location id.
+# Before using with a new shop, set a proper location id.
 # Find it manually with
+# session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
+# shopify.Location.activate_session(session)
 # locations = shopify.Location.find()
-LOCATION_ID = 78160462144
+# shopify.Location.get(id)
+
+DSS_STUDIO_LOCATION_ID = 66102919352
+CHOBHAM_LOCATION_ID = 60955099320
+P2P_LOCATION_ID = 74125705535
 
 with open('typeform_config.json') as file:
     config = json.loads(file.read())
@@ -52,7 +58,7 @@ def calc_price_from_coins(coins: int):
 
 
 def upload_product(brand, colour, pattern, item_type, size, description, coin_price: int,
-                   images_bytes_list: List[bytes], remote_swapper=True):
+                   images_bytes_list: List[bytes], is_p2p=True):
     # session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
     # shopify.ShopifyResource.activate_session(session)
 
@@ -64,13 +70,13 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
 
     price = calc_price_from_coins(coin_price)
     title = f'{brand} {colour} {pattern} {item_type}, {size}'
-    if remote_swapper:
+    if is_p2p:
         if description:
             description += '<br/><br/>'
         description += 'This item has been remotely uploaded by another swapper, ' \
                        'it may arrive separately from the rest of your order.'
     tags = ', '.join(
-        [brand, colour, item_type, size[len('Size '):]] + ['p2p'] if remote_swapper else [])  # TODO: ask Lydia
+        [brand, colour, item_type, size[len('Size '):]] + ['p2p'] if is_p2p else [])  # TODO: ask Lydia
 
     images = []
     for image_bytes in images_bytes_list:
@@ -88,7 +94,7 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
         # 'type': item_type,
         'product_type': item_type,
         'tags': tags,
-        'status': 'active',
+        'status': 'draft',
         'coin_price': coin_price,
         'coin_price_type': 'purple',
         'variants': [  # TODO(me)
@@ -116,7 +122,8 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
 
             # https://shopify.dev/api/admin-rest/2023-01/resources/inventorylevel#post-inventory-levels-adjust
             inventory_item_id = product.variants[0].inventory_item_id
-            inventory_level = shopify.InventoryLevel.set(LOCATION_ID, inventory_item_id, 1)
+            inventory_level = shopify.InventoryLevel.set(P2P_LOCATION_ID if is_p2p else DSS_STUDIO_LOCATION_ID,
+                                                         inventory_item_id, 1)
 
             if inventory_level.errors.errors:
                 logging.error(f'Error when adding inventory level: {inventory_level.errors.errors}')
