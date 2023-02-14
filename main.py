@@ -78,7 +78,7 @@ def upload_product(brand, colour, pattern, item_type, weight_lb, size, descripti
         description += 'This item has been remotely uploaded by another swapper, ' \
                        'it may arrive separately from the rest of your order.'
     tags = ', '.join(
-        [brand, colour, item_type, size[len('Size '):]] + ['p2p'] if is_p2p else [])  # TODO: ask Lydia
+        ['all', brand, colour, item_type, size[len('Size '):]] + ['p2p'] if is_p2p else [])  # TODO: ask Lydia
 
     images = []
     for image_bytes in images_bytes_list:
