@@ -139,16 +139,16 @@ def download_typeform_image(file_url) -> bytes:
     return r.content
 
 
-def typeform_swap_products(num_results: int, since='2023-02-02T18:04:07Z'):
+def typeform_swap_products(num_results: int = 1000):
     typeform = Typeform(TYPEFORM_TOKEN)
 
     image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIZE_IMAGE_FIELD_ID, VENDOR_IMAGE_FIELD_ID}
 
-    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, since=since)
-    for response in responses_dict['items']:
+    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results)
+    for response in tqdm(responses_dict['items']):
         logging.info(f"'Parsing response submitted at {response['submitted_at']}', response token {response['token']}")
         swap_product = SwapProduct()
-        for answer in tqdm(response['answers']):
+        for answer in response['answers']:
             field_id = answer['field']['id']
             if field_id in image_fields:
                 file_url = answer['file_url']
@@ -180,7 +180,7 @@ def main():
     logging.root.setLevel(logging.INFO)
     logging.info('Typeform uploader script started')
 
-    for product in typeform_swap_products(20):
+    for product in typeform_swap_products():
         brand = 'DKNY'
         colour = 'Blue'
         pattern = 'Checkered'
