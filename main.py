@@ -51,10 +51,6 @@ def calc_price_from_coins(coins: int):
     return coins / 50 + 2
 
 
-def get_coin_price_type(coins: int):
-    return 'purple'  # TODO: ask Lydia
-
-
 def upload_product(brand, colour, pattern, item_type, size, description, coin_price: int,
                    images_bytes_list: List[bytes], remote_swapper=True):
     # session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
@@ -66,7 +62,6 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
     item_type.capitalize()
     size.capitalize()
 
-    coin_price_type = get_coin_price_type(coin_price)
     price = calc_price_from_coins(coin_price)
     title = f'{brand} {colour} {pattern} {item_type}, {size}'
     if remote_swapper:
@@ -95,7 +90,7 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
         'tags': tags,
         'status': 'active',
         'coin_price': coin_price,
-        # 'coin_price_type': coin_price_type,  # TODO: Lydia
+        'coin_price_type': 'purple',
         'variants': [  # TODO(me)
             {
                 'weight': 0.1,  # TODO: ask Lydia
