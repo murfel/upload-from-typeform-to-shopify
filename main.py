@@ -59,19 +59,18 @@ def calc_price_from_coins(coins: int):
     return coins / 50 + 2
 
 
-def upload_product(brand, colour, pattern, item_type, weight_lb, size, description, coin_price: int,
+def upload_product(brand, colour, item_type, weight_lb, size, description, coin_price: int,
                    images_bytes_list: List[bytes], is_p2p=True):
     # session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
     # shopify.ShopifyResource.activate_session(session)
 
     # brand is not capitalized on purpose
     colour.capitalize()
-    pattern.capitalize()
     item_type.capitalize()
     size.capitalize()
 
     price = calc_price_from_coins(coin_price)
-    title = f'{brand} {colour} {pattern} {item_type}, {size}'
+    title = f'{brand} {colour} {item_type}, {size}'
     if is_p2p:
         if description:
             description += '<br/><br/>'
@@ -87,13 +86,11 @@ def upload_product(brand, colour, pattern, item_type, weight_lb, size, descripti
     arguments = {
         'brand ': brand,
         'colour': colour,
-        'pattern': pattern,
         'item': item_type,
         'size': size,
         'title': title,
         'body_html': description,
         'vendor': brand,
-        # 'type': item_type,
         'product_type': item_type,
         'tags': tags,
         'status': 'draft',
@@ -217,7 +214,6 @@ def main():
     for product in typeform_swap_products():
         brand = 'DKNY'
         colour = 'Blue'
-        pattern = 'Checkered'
         item_type = 'Dress'
         size = 'Size XS'
         coin_price = 100
@@ -232,7 +228,7 @@ def main():
             logging.error(f'No weight for item type: {item_type.lower()}, '
                           f'using default: {SwapProduct.DEFAULT_WEIGHT} lb')
 
-        upload_product(brand, colour, pattern, item_type, weight_lb, size, product.additional_text, coin_price,
+        upload_product(brand, colour, item_type, weight_lb, size, product.additional_text, coin_price,
                        image_list, is_p2p)
 
 
