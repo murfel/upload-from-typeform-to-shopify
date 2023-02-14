@@ -15,7 +15,7 @@ def crop(image_data: bytes) -> bytes:
     try:
         image = Image.open(io.BytesIO(image_data))
     except PIL.UnidentifiedImageError:
-        logging.error("Couldn't crop: PIL.UnidentifiedImageError")
+        logging.warning("Couldn't crop: PIL.UnidentifiedImageError")
         return image_data
     width, height = image.size
     if width < height:
