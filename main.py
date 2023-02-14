@@ -50,6 +50,7 @@ EMAIL_FIELD_ID = config['email_question_id']
 
 MODERATOR_EMAIL = 'moderator@dontshopswap.co.uk'
 
+
 def calc_price_from_coins(coins: int):
     if coins > 1000:
         logging.warning(f'Coins > 1000 for some item, coins = {coins}')
@@ -114,22 +115,47 @@ def upload_product(brand, colour, pattern, item_type, size, description, coin_pr
     }
 
     with shopify.Session.temp(SHOP_URL, API_VERSION, ACCESS_TOKEN):
+        # Create product.
         product = shopify.Product.create(arguments)
         if product.errors.errors is None:
             logging.error(f'Product not created: {title}, {product}')
             print(product.errors.errors)
+            return
+
+        logging.info(f'Product created: ID={product.id}, {title}')
+
+        # Add inventory.
+        # https://shopify.dev/api/admin-rest/2023-01/resources/inventorylevel#post-inventory-levels-adjust
+        inventory_item_id = product.variants[0].inventory_item_id
+        inventory_level = shopify.InventoryLevel.set(P2P_LOCATION_ID if is_p2p else DSS_STUDIO_LOCATION_ID,
+                                                     inventory_item_id, 1)
+
+        if inventory_level.errors.errors:
+            logging.error(f'Error when adding inventory level: {inventory_level.errors.errors}')
         else:
-            logging.info(f'Product created: ID={product.id}, {title}')
+            logging.info(f'Added inventory +1: ID={product.id}')
 
-            # https://shopify.dev/api/admin-rest/2023-01/resources/inventorylevel#post-inventory-levels-adjust
-            inventory_item_id = product.variants[0].inventory_item_id
-            inventory_level = shopify.InventoryLevel.set(P2P_LOCATION_ID if is_p2p else DSS_STUDIO_LOCATION_ID,
-                                                         inventory_item_id, 1)
+        # Add metafields.
+        coin_price_metafield = shopify.Metafield.create(
+            {'namespace': 'global', 'key': 'coin_price', 'value': coin_price,
+             'type': 'number_integer', 'owner_id': product.id, 'owner_resource': 'product'})
 
-            if inventory_level.errors.errors:
-                logging.error(f'Error when adding inventory level: {inventory_level.errors.errors}')
-            else:
-                logging.info(f'Added inventory +1: ID={product.id}')
+        coin_price_type_metafield = shopify.Metafield.create(
+            {'namespace': 'global', 'key': 'coin_price_type', 'value': 'purple',
+             'type': 'single_line_text_field', 'owner_id': product.id, 'owner_resource': 'product'})
+
+        peer_to_peer_metafield = shopify.Metafield.create(
+            {'namespace': 'custom', 'key': 'peer_to_peer', 'value': is_p2p,
+             'type': 'boolean', 'owner_id': product.id, 'owner_resource': 'product'})
+
+        if coin_price_metafield.errors.errors or coin_price_type_metafield.errors.errors \
+                or peer_to_peer_metafield.errors.errors:
+            logging.info(f'Metafield creation errors: {coin_price_metafield.errors.errors}, '
+                         f'\n{coin_price_type_metafield.errors.errors},'
+                         f'\n{peer_to_peer_metafield.errors.errors}')
+        else:
+            logging.info(f'Metafields created: {coin_price_metafield.id}, {coin_price_type_metafield.id}, '
+                         f'{peer_to_peer_metafield.id}')
 
 
 def pp(json_str):
