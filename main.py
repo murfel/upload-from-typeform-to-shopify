@@ -34,18 +34,21 @@ TYPEFORM_TOKEN = 'tfp_Szdsy8sB4vdevcFrxbTZ3ZrnSpVnNTx2wWLGPCagJEF_3mQ2r4PUvaDeYh
 # locations = shopify.Location.find()
 LOCATION_ID = 78160462144
 
+with open('typeform_config.json') as file:
+    config = json.loads(file.read())
+
 # forms_dict = typeform.forms.list()
 # form_id = forms_dict['items'][0]['id']
-TYPEFORM_FORM_ID = 'QMzXvRHd'
+TYPEFORM_FORM_ID = config['typeform_form_id']
 
 # form = typeform.forms.get(form_id)
 
-EMAIL_FIELD_ID = 'QZ1lXSuypzR9'
-FRONT_IMAGE_FIELD_ID = 'hik691cyQmjj'
-BACK_IMAGE_FIELD_ID = '4apTE22YmJOk'
-SIZE_IMAGE_FIELD_ID = 'La4vF6c5rj7p'
-BRAND_IMAGE_FIELD_ID = 'xnDRkjc5MsTd'  # optional
-ADDITIONAL_TEXT_FIELD_ID = 'iGywqmCW5mQm'  # optional
+FRONT_IMAGE_FIELD_ID = config['front_image_question_id']
+BACK_IMAGE_FIELD_ID = config['back_image_question_id']
+SIZE_IMAGE_FIELD_ID = config['size_image_question_id']
+VENDOR_IMAGE_FIELD_ID = config['vendor_image_question_id']
+ADDITIONAL_TEXT_FIELD_ID = config['additional_text_question_id']
+EMAIL_FIELD_ID = config['email_question_id']
 
 
 def calc_price_from_coins(coins: int):
@@ -151,7 +154,7 @@ def download_typeform_image(file_url) -> bytes:
 def typeform_swap_products(num_results: int, since='2023-02-02T18:04:07Z'):
     typeform = Typeform(TYPEFORM_TOKEN)
 
-    image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIZE_IMAGE_FIELD_ID, BRAND_IMAGE_FIELD_ID}
+    image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIZE_IMAGE_FIELD_ID, VENDOR_IMAGE_FIELD_ID}
 
     responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, since=since)
     for response in responses_dict['items']:
@@ -170,7 +173,7 @@ def typeform_swap_products(num_results: int, since='2023-02-02T18:04:07Z'):
                     swap_product.set_back_image(image)
                 elif field_id == SIZE_IMAGE_FIELD_ID:
                     swap_product.set_size_image(image)
-                elif field_id == BRAND_IMAGE_FIELD_ID:
+                elif field_id == VENDOR_IMAGE_FIELD_ID:
                     swap_product.set_brand_image(image)
 
             elif field_id == EMAIL_FIELD_ID:
