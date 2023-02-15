@@ -147,7 +147,9 @@ class SwapProduct:
         return weight_lb
 
     def get_size(self):
-        return self.size.split(' =')[0]
+        if '=' not in self.size:
+            return 'One Size'
+        return self.size.split(' =')[0]  # XS = UK 6-8
 
     def get_tags(self) -> str:
 
