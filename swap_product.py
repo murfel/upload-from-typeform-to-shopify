@@ -9,7 +9,7 @@ from PIL import Image
 REMOVE_BG_TOKEN = 'Q1opKLc9VgX59WX8WbF7ztjf'
 
 
-def crop(image_data: bytes) -> bytes:
+def crop(image_data: bytes, preview=False) -> bytes:
     if not image_data:
         logging.error('Trying to crop empty image')
     try:
@@ -18,10 +18,9 @@ def crop(image_data: bytes) -> bytes:
         logging.warning("Couldn't crop: PIL.UnidentifiedImageError")
         return image_data
     width, height = image.size
-    if width < height:
-        new_size = 400, 650
-    else:
-        new_size = 650, 400
+    new_size = 400, 650 if preview else 1600, 2000
+    if width > height:
+        new_size = new_size[1], new_size[0]
     image.thumbnail(new_size)
     exif = image.info['exif'] if 'exif' in image.info else None
     byte_array = io.BytesIO()
