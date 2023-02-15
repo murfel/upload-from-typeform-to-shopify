@@ -150,6 +150,11 @@ class SwapProduct:
         return self.size.split(' =')[0]
 
     def get_tags(self) -> str:
+
+        item_type = self.item_type
+        if item_type.lower() in ['hat', 'belt', 'scarf', 'bag']:
+            item_type = 'Accessories'
+
         return ', '.join(
-            ['all', self.brand, self.item_type, f'{self.get_size()}'] +
+            ['all', self.brand, item_type, f'{self.get_size()}'] +
             (['p2p'] if self.is_p2p() else []))
