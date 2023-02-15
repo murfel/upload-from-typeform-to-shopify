@@ -73,14 +73,14 @@ def upload_product(product: SwapProduct, coin_price: int, price: int):
 
     # TODO: canonize brand
     # TODO: support different size types
-    title = f'{product.brand} {product.adjective} {product.item_type}, Size {product.size}'.capitalize()
+    title = f'{product.brand} {product.adjective} {product.item_type}, Size {product.get_size()}'
+    title = ' '.join([word.capitalize() for word in title.split()])
     description = product.additional_text
     if description:
         description += '<br/><br/>'
     description += f"""
     <b>Size: {product.size}</b><br/>
-    <b>Condition: {product.condition}</b><br/><br/>
-    
+    <b>Condition: {product.condition}</b><br/>
     <b>Service fee: £{price}</b>
     """
     # TODO: add full text when coin calculator is figured out
@@ -242,8 +242,6 @@ def main():
         price = calc_price_from_coins(coin_price)
 
         upload_product(product, coin_price, price)
-
-        break
 
 
 if __name__ == '__main__':

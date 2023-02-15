@@ -79,6 +79,7 @@ class SwapProduct:
         self._front_image: Optional[bytes] = None
         self._back_image: Optional[bytes] = None
         self._size_image: Optional[bytes] = None
+        self._unremoved_brand_image: Optional[bytes] = None
         self._brand_image: Optional[bytes] = None
         self._imperfections_image: Optional[bytes] = None
 
@@ -110,6 +111,7 @@ class SwapProduct:
         self._size_image = self._set_image(image)
 
     def set_brand_image(self, image: bytes):
+        self._unremoved_brand_image = crop(image)
         self._brand_image = self._set_image(image)
 
     def set_imperfections_image(self, image: bytes):
@@ -125,11 +127,14 @@ class SwapProduct:
             images.append(self._size_image)
         if self._brand_image:
             images.append(self._brand_image)
+        if self._unremoved_brand_image:
+            images.append(self._unremoved_brand_image)
         if self._imperfections_image:
             images.append(self._imperfections_image)
         return images
 
     def is_p2p(self) -> bool:
+        return False
         return bool(self.email)
 
     def get_weight(self):
@@ -141,6 +146,10 @@ class SwapProduct:
                           f'using default: {SwapProduct.DEFAULT_WEIGHT} lb')
         return weight_lb
 
+    def get_size(self):
+        return self.size.split(' =')[0]
+
     def get_tags(self) -> str:
         return ', '.join(
-            ['all', self.brand, self.item_type, self.size[len('Size '):]] + ['p2p'] if self.is_p2p() else [])
+            ['all', self.brand, self.item_type, f'{self.get_size()}'] +
+            (['p2p'] if self.is_p2p() else []))
