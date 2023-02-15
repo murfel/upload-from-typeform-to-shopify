@@ -78,6 +78,8 @@ def upload_product(product: SwapProduct, coin_price: int, price: int):
     title += f', ' + product.get_size_for_title()
     description = product.additional_text
     if description:
+        description = description[0].capitalize() + description[1:]
+    if description:
         description += '<br/><br/>'
     description += f"""
     <b>Size: {product.size}</b><br/>
