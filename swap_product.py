@@ -6,7 +6,7 @@ import PIL
 import requests
 from PIL import Image
 
-REMOVE_BG_TOKEN = 'piFNEtB5QDWAcUt7hEFmmpBS'
+REMOVE_BG_TOKEN = 'Q1opKLc9VgX59WX8WbF7ztjf'
 
 
 def crop(image_data: bytes) -> bytes:
