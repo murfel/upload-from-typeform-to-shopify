@@ -18,7 +18,7 @@ def crop(image_data: bytes, preview=False) -> bytes:
         logging.warning("Couldn't crop: PIL.UnidentifiedImageError")
         return image_data
     width, height = image.size
-    new_size = 400, 650 if preview else 1600, 2000
+    new_size = (400, 650) if preview else (1600, 2000)
     if width > height:
         new_size = new_size[1], new_size[0]
     image.thumbnail(new_size)
@@ -33,6 +33,8 @@ def crop(image_data: bytes, preview=False) -> bytes:
 
 
 def remove_background(image: bytes) -> bytes:
+    # return image  # saving quota
+
     # NB: removes EXIF tags and other image meta-data
     response = requests.post(
         'https://api.remove.bg/v1.0/removebg',
@@ -78,8 +80,15 @@ class SwapProduct:
         self._back_image: Optional[bytes] = None
         self._size_image: Optional[bytes] = None
         self._brand_image: Optional[bytes] = None
+        self._imperfections_image: Optional[bytes] = None
 
-        self.email: str = ''
+        self.brand = 'Unbranded'
+        self.adjective = ''
+        self.item_type = ''
+        self.condition = ''
+        self.size = ''
+
+        self.email: Optional[str] = None
         self.additional_text: str = ''
 
     def _set_image(self, image: bytes) -> Optional[bytes]:
@@ -97,11 +106,14 @@ class SwapProduct:
     def set_back_image(self, image: bytes):
         self._back_image = self._set_image(image)
 
-    def set_size_image(self, image: bytes):
+    def set_side_image(self, image: bytes):
         self._size_image = self._set_image(image)
 
     def set_brand_image(self, image: bytes):
         self._brand_image = self._set_image(image)
+
+    def set_imperfections_image(self, image: bytes):
+        self._imperfections_image = self._set_image(image)
 
     def get_all_images(self) -> List[bytes]:
         images = []
@@ -113,4 +125,22 @@ class SwapProduct:
             images.append(self._size_image)
         if self._brand_image:
             images.append(self._brand_image)
+        if self._imperfections_image:
+            images.append(self._imperfections_image)
         return images
+
+    def is_p2p(self) -> bool:
+        return bool(self.email)
+
+    def get_weight(self):
+        weight_lb = SwapProduct.DEFAULT_WEIGHT
+        if self.item_type.lower() in SwapProduct.ITEM_TYPE_TO_WEIGHT.keys():
+            weight_lb = SwapProduct.ITEM_TYPE_TO_WEIGHT[self.item_type.lower()]
+        else:
+            logging.error(f'No weight for item type: {self.item_type.lower()}, '
+                          f'using default: {SwapProduct.DEFAULT_WEIGHT} lb')
+        return weight_lb
+
+    def get_tags(self) -> str:
+        return ', '.join(
+            ['all', self.brand, self.item_type, self.size[len('Size '):]] + ['p2p'] if self.is_p2p() else [])

@@ -1,7 +1,6 @@
 import base64
 import json
 import logging
-from typing import List
 
 import requests
 import shopify
@@ -32,7 +31,7 @@ DSS_STUDIO_LOCATION_ID = 66102919352
 CHOBHAM_LOCATION_ID = 60955099320
 P2P_LOCATION_ID = 74125705535
 
-with open('typeform_config.json') as file:
+with open('typeform_config_team.json') as file:
     config = json.loads(file.read())
 
 # forms_dict = typeform.forms.list()
@@ -43,12 +42,18 @@ TYPEFORM_FORM_ID = config['typeform_form_id']
 
 FRONT_IMAGE_FIELD_ID = config['front_image_question_id']
 BACK_IMAGE_FIELD_ID = config['back_image_question_id']
-SIZE_IMAGE_FIELD_ID = config['size_image_question_id']
+SIDE_IMAGE_FIELD_ID = config['side_image_question_id']
 VENDOR_IMAGE_FIELD_ID = config['vendor_image_question_id']
-ADDITIONAL_TEXT_FIELD_ID = config['additional_text_question_id']
-EMAIL_FIELD_ID = config['email_question_id']
+IMPERFECTIONS_IMAGE_FIELD_ID = config['imperfections_image_question_id']
 
-MODERATOR_EMAIL = 'moderator@dontshopswap.co.uk'
+BRAND_FIELD_ID = config['brand_question_id']
+ADJECTIVE_FIELD_ID = config['adjective_question_id']
+ITEM_TYPE_FIELD_ID = config['item_type_question_id']
+CONDITION_FIELD_ID = config['condition_question_id']
+SIZE_FIELD_ID = config['size_question_id']
+ADDITIONAL_TEXT_FIELD_ID = config['additional_text_question_id']
+
+EMAIL_FIELD_ID = config['email_question_id']
 
 
 def calc_price_from_coins(coins: int):
@@ -56,46 +61,53 @@ def calc_price_from_coins(coins: int):
         logging.warning(f'Coins > 1000 for some item, coins = {coins}')
     if coins >= 400:
         return 10
-    return coins / 50 + 2
+    price = coins / 50 + 2
+    if price == int(price):
+        return int(price)
+    return price
 
 
-def upload_product(brand, colour, item_type, weight_lb, size, description, coin_price: int, price: int,
-                   images_bytes_list: List[bytes], is_p2p=True):
+def upload_product(product: SwapProduct, coin_price: int, price: int):
     # session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
     # shopify.ShopifyResource.activate_session(session)
 
-    # brand is not capitalized on purpose
-    colour.capitalize()
-    item_type.capitalize()
-    size.capitalize()
+    # TODO: canonize brand
+    # TODO: support different size types
+    title = f'{product.brand} {product.adjective} {product.item_type}, Size {product.size}'.capitalize()
+    description = product.additional_text
+    if description:
+        description += '<br/><br/>'
+    description += f"""
+    <b>Size: {product.size}</b><br/>
+    <b>Condition: {product.condition}</b><br/><br/>
+    
+    <b>Service fee: £{price}</b>
+    """
+    # TODO: add full text when coin calculator is figured out
+    # <b>This product is worth {coin_price} swap coins and has a £{price} service fee.</b>
 
-    title = f'{brand} {colour} {item_type}, {size}'
-    if is_p2p:
+    if product.is_p2p():
         if description:
             description += '<br/><br/>'
         description += 'This item has been remotely uploaded by another swapper, ' \
                        'it may arrive separately from the rest of your order.'
-    tags = ', '.join(
-        ['all', brand, colour, item_type, size[len('Size '):]] + ['p2p'] if is_p2p else [])  # TODO: ask Lydia
+    tags = product.get_tags()
 
     images = []
-    for image_bytes in images_bytes_list:
+    for image_bytes in product.get_all_images():
         images.append({'attachment': base64.b64encode(image_bytes).decode('ascii')})
 
     arguments = {
-        'brand ': brand,
-        'colour': colour,
-        'item': item_type,
-        'size': size,
+        'size': product.size,
         'title': title,
         'body_html': description,
-        'vendor': brand,
-        'product_type': item_type,
+        'vendor': product.brand,
+        'product_type': product.item_type,
         'tags': tags,
         'status': 'draft',
         'variants': [  # TODO(me)
             {
-                'weight': weight_lb,
+                'weight': product.get_weight(),
                 'weight_unit': 'lb',
                 'price': price,
                 'taxable': True,
@@ -107,6 +119,8 @@ def upload_product(brand, colour, item_type, weight_lb, size, description, coin_
         ],
         'images': images
     }
+
+    is_p2p = product.is_p2p()
 
     with shopify.Session.temp(SHOP_URL, API_VERSION, ACCESS_TOKEN):
         # Create product.
@@ -170,7 +184,7 @@ def download_typeform_image(file_url) -> bytes:
 def typeform_swap_products(num_results: int = 1000):
     typeform = Typeform(TYPEFORM_TOKEN)
 
-    image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIZE_IMAGE_FIELD_ID, VENDOR_IMAGE_FIELD_ID}
+    image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIDE_IMAGE_FIELD_ID, VENDOR_IMAGE_FIELD_ID, IMPERFECTIONS_IMAGE_FIELD_ID}
 
     responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results)
     for response in tqdm(responses_dict['items']):
@@ -187,17 +201,31 @@ def typeform_swap_products(num_results: int = 1000):
                     swap_product.set_front_image(image)
                 elif field_id == BACK_IMAGE_FIELD_ID:
                     swap_product.set_back_image(image)
-                elif field_id == SIZE_IMAGE_FIELD_ID:
-                    swap_product.set_size_image(image)
+                elif field_id == SIDE_IMAGE_FIELD_ID:
+                    swap_product.set_side_image(image)
                 elif field_id == VENDOR_IMAGE_FIELD_ID:
                     swap_product.set_brand_image(image)
+                elif field_id == IMPERFECTIONS_IMAGE_FIELD_ID:
+                    swap_product.set_imperfections_image(image)
 
+            elif field_id == BRAND_FIELD_ID:
+                swap_product.brand = answer['text']
+            elif field_id == ADJECTIVE_FIELD_ID:
+                swap_product.adjective = answer['text']
+            elif field_id == ITEM_TYPE_FIELD_ID:
+                swap_product.item_type = answer['choice']['label']
+            elif field_id == CONDITION_FIELD_ID:
+                swap_product.condition = answer['choice']['label']
+            elif field_id == SIZE_FIELD_ID:
+                swap_product.size = answer['choice']['label']
             elif field_id == EMAIL_FIELD_ID:
                 swap_product.email = answer['email']
             elif field_id == ADDITIONAL_TEXT_FIELD_ID:
                 swap_product.additional_text = answer['text']
                 logging.info(swap_product.additional_text)
             else:
+                if field_id == 'ff6s76tc2lzC':  # 'Want to add another item'
+                    continue
                 logging.error(f'Add a new field id: {field_id}, {json.dumps(answer)}')
 
         yield swap_product
@@ -209,27 +237,13 @@ def main():
     logging.info('Typeform uploader script started')
 
     for product in typeform_swap_products():
-        brand = 'DKNY'
-        colour = 'Blue'
-        item_type = 'Dress'
-        size = 'Size XS'
-
-        image_list = product.get_all_images()
-        is_p2p = (product.email != MODERATOR_EMAIL)
-
-        weight_lb = SwapProduct.DEFAULT_WEIGHT
-        if item_type.lower() in SwapProduct.ITEM_TYPE_TO_WEIGHT.keys():
-            weight_lb = SwapProduct.ITEM_TYPE_TO_WEIGHT[item_type.lower()]
-        else:
-            logging.error(f'No weight for item type: {item_type.lower()}, '
-                          f'using default: {SwapProduct.DEFAULT_WEIGHT} lb')
-
         # coin_price = calc_coin_price(brand, item_type)
         coin_price = 50
         price = calc_price_from_coins(coin_price)
 
-        upload_product(brand, colour, item_type, weight_lb, size, product.additional_text, coin_price, price,
-                       image_list, is_p2p)
+        upload_product(product, coin_price, price)
+
+        break
 
 
 if __name__ == '__main__':
