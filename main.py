@@ -73,8 +73,9 @@ def upload_product(product: SwapProduct, coin_price: int, price: int):
 
     # TODO: canonize brand
     # TODO: support different size types
-    title = f'{product.brand} {product.adjective} {product.item_type}, Size {product.get_size()}'
+    title = f'{product.brand} {product.adjective} {product.item_type}'
     title = ' '.join([word.capitalize() for word in title.split()])
+    title += f', ' + product.get_size_for_title()
     description = product.additional_text
     if description:
         description += '<br/><br/>'
@@ -186,7 +187,10 @@ def typeform_swap_products(num_results: int = 1000):
 
     image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIDE_IMAGE_FIELD_ID, VENDOR_IMAGE_FIELD_ID, IMPERFECTIONS_IMAGE_FIELD_ID}
 
-    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results)
+    with open('last_uploaded_time.txt') as token_file:
+        last_uploaded_time = token_file.read().strip()
+
+    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, since=last_uploaded_time)
     for response in tqdm(responses_dict['items']):
         logging.info(f"'Parsing response submitted at {response['submitted_at']}', response token {response['token']}")
         swap_product = SwapProduct()
@@ -242,6 +246,8 @@ def main():
         price = calc_price_from_coins(coin_price)
 
         upload_product(product, coin_price, price)
+
+        # break
 
 
 if __name__ == '__main__':

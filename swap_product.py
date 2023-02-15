@@ -142,10 +142,10 @@ class SwapProduct:
                           f'using default: {SwapProduct.DEFAULT_WEIGHT} lb')
         return weight_lb
 
-    def get_size(self):
+    def get_size_for_title(self):
         if '=' not in self.size:
             return 'One Size'
-        return self.size.split(' =')[0]  # XS = UK 6-8
+        return 'Size ' + self.size.split(' =')[0]  # XS = UK 6-8
 
     def get_tags(self) -> str:
 
@@ -153,6 +153,12 @@ class SwapProduct:
         if item_type.lower() in ['hat', 'belt', 'scarf', 'bag']:
             item_type = 'Accessories'
 
+        size_letters = ''
+        if '=' not in self.size:
+            size_letters = 'One Size'
+        else:
+            size_letters = self.size.split(' =')[0]  # XS = UK 6-8
+
         return ', '.join(
-            ['all', self.brand, item_type, f'{self.get_size()}'] +
+            ['all', self.brand.lower(), item_type.lower(), size_letters] +
             (['p2p'] if self.is_p2p() else []))
