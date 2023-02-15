@@ -79,7 +79,6 @@ class SwapProduct:
         self._front_image: Optional[bytes] = None
         self._back_image: Optional[bytes] = None
         self._size_image: Optional[bytes] = None
-        self._unremoved_brand_image: Optional[bytes] = None
         self._brand_image: Optional[bytes] = None
         self._imperfections_image: Optional[bytes] = None
 
@@ -111,8 +110,7 @@ class SwapProduct:
         self._size_image = self._set_image(image)
 
     def set_brand_image(self, image: bytes):
-        self._unremoved_brand_image = crop(image)
-        self._brand_image = self._set_image(image)
+        self._brand_image = crop(image)
 
     def set_imperfections_image(self, image: bytes):
         self._imperfections_image = self._set_image(image)
@@ -127,8 +125,6 @@ class SwapProduct:
             images.append(self._size_image)
         if self._brand_image:
             images.append(self._brand_image)
-        if self._unremoved_brand_image:
-            images.append(self._unremoved_brand_image)
         if self._imperfections_image:
             images.append(self._imperfections_image)
         return images
