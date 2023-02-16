@@ -73,9 +73,9 @@ def upload_product(product: SwapProduct, coin_price: int, price: int):
 
     # TODO: canonize brand
     # TODO: support different size types
-    title = f'{product.brand} {product.adjective} {product.item_type}'
-    title = ' '.join([word.capitalize() for word in title.split()])
-    title += f', ' + product.get_size_for_title()
+    title = ' '.join([word.capitalize() for word in [product.adjective, product.item_type]])
+    title = product.brand + ' ' + title
+    title += ', ' + product.get_size_for_title()
     description = product.additional_text
     if description:
         description = description[0].capitalize() + description[1:]
