@@ -197,7 +197,7 @@ def typeform_swap_products(num_results: int = 1000):
         last_uploaded_time = token_file.read().strip()
 
     responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, since=last_uploaded_time)
-    for response in tqdm(responses_dict['items']):
+    for response in tqdm(list(reversed(responses_dict['items']))):
         logging.info(f"'Parsing response submitted at {response['submitted_at']}', response token {response['token']}")
         swap_product = SwapProduct()
         for answer in response['answers']:
