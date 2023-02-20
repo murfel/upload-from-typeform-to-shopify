@@ -52,6 +52,7 @@ ITEM_TYPE_FIELD_ID = config['item_type_question_id']
 CONDITION_FIELD_ID = config['condition_question_id']
 SIZE_FIELD_ID = config['size_question_id']
 ADDITIONAL_TEXT_FIELD_ID = config['additional_text_question_id']
+TAGS_FIELD_ID = config['tags_field_id']
 
 EMAIL_FIELD_ID = config['email_question_id']
 
@@ -232,6 +233,8 @@ def typeform_swap_products(num_results: int = 1000):
             elif field_id == ADDITIONAL_TEXT_FIELD_ID:
                 swap_product.additional_text = answer['text']
                 logging.info(swap_product.additional_text)
+            elif field_id == TAGS_FIELD_ID:
+                swap_product.extra_tags = [tag.strip().lower() for tag in answer['text'].split(',')]
             else:
                 if field_id == 'ff6s76tc2lzC':  # 'Want to add another item'
                     continue

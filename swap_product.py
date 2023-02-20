@@ -87,6 +87,7 @@ class SwapProduct:
         self.item_type = ''
         self.condition = ''
         self.size = ''
+        self.extra_tags: List[str] = []
 
         self.email: Optional[str] = None
         self.additional_text: str = ''
@@ -160,5 +161,5 @@ class SwapProduct:
             size_letters = self.size.split(' =')[0]  # XS = UK 6-8
 
         return ', '.join(
-            ['all', self.brand.lower(), item_type.lower(), size_letters] +
+            ['all', self.brand.lower(), item_type.lower(), size_letters] + self.extra_tags +
             (['p2p'] if self.is_p2p() else []))
