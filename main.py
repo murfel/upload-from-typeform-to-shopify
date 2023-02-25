@@ -68,7 +68,7 @@ def calc_price_from_coins(coins: int):
     return price
 
 
-def upload_product(product: SwapProduct, coin_price: int, price: int):
+def upload_product(token: str, product: SwapProduct, coin_price: int, price: int):
     # session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
     # shopify.ShopifyResource.activate_session(session)
 
@@ -149,6 +149,8 @@ def upload_product(product: SwapProduct, coin_price: int, price: int):
             logging.error(f'Error when adding inventory level: {inventory_level.errors.errors}')
         else:
             logging.info(f'Added inventory +1: ID={product.id}')
+            with open('last_uploaded_token.txt', 'w') as file:
+                file.write(token)
 
         # Add metafields.
         coin_price_metafield = shopify.Metafield.create(
@@ -193,10 +195,10 @@ def typeform_swap_products(num_results: int = 1000):
 
     image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIDE_IMAGE_FIELD_ID, VENDOR_IMAGE_FIELD_ID, IMPERFECTIONS_IMAGE_FIELD_ID}
 
-    with open('last_uploaded_time.txt') as token_file:
-        last_uploaded_time = token_file.read().strip()
+    with open('last_uploaded_token.txt') as token_file:
+        last_uploaded_token = token_file.read().strip()
 
-    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, since=last_uploaded_time)
+    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, after=last_uploaded_token)
     for response in tqdm(list(reversed(responses_dict['items']))):
         logging.info(f"'Parsing response submitted at {response['submitted_at']}', response token {response['token']}")
         swap_product = SwapProduct()
@@ -240,7 +242,7 @@ def typeform_swap_products(num_results: int = 1000):
                     continue
                 logging.error(f'Add a new field id: {field_id}, {json.dumps(answer)}')
 
-        yield swap_product
+        yield response['token'], swap_product
 
 
 def main():
@@ -248,12 +250,12 @@ def main():
     logging.root.setLevel(logging.INFO)
     logging.info('Typeform uploader script started')
 
-    for product in typeform_swap_products():
+    for token, product in typeform_swap_products():
         # coin_price = calc_coin_price(brand, item_type)
         coin_price = 50
         price = calc_price_from_coins(coin_price)
 
-        upload_product(product, coin_price, price)
+        upload_product(token, product, coin_price, price)
 
         # break
 
