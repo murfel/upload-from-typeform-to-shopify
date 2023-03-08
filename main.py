@@ -198,7 +198,12 @@ def typeform_swap_products(num_results: int = 1000):
     with open('last_uploaded_token.txt') as token_file:
         last_uploaded_token = token_file.read().strip()
 
-    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, after=last_uploaded_token)
+    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, since='2023-02-28T16:38:31Z')
+    # TODO: make sure responses are sorted from past to future,
+    #  so that uploads to Shopify preserve the chronological order
+    # typeform DOES NOT guarantee this to be sorted, and I did catch problems here
+
+    # TODO: tqdm is a bit wonky and one-off because it's inside a generator
     for response in tqdm(list(reversed(responses_dict['items']))):
         logging.info(f"'Parsing response submitted at {response['submitted_at']}', response token {response['token']}")
         swap_product = SwapProduct()
@@ -246,7 +251,7 @@ def typeform_swap_products(num_results: int = 1000):
 
 
 def main():
-    logging.basicConfig()
+    logging.basicConfig(filename='logs.txt', filemode='a')
     logging.root.setLevel(logging.INFO)
     logging.info('Typeform uploader script started')
 
