@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+from datetime import datetime
 
 import requests
 import shopify
@@ -68,7 +69,7 @@ def calc_price_from_coins(coins: int):
     return price
 
 
-def upload_product(token: str, product: SwapProduct, coin_price: int, price: int):
+def upload_product(token: str, product: SwapProduct, coin_price: int, price: int|float):
     # session = shopify.Session(SHOP_URL, API_VERSION, ACCESS_TOKEN)
     # shopify.ShopifyResource.activate_session(session)
 
@@ -189,6 +190,66 @@ def download_typeform_image(file_url) -> bytes:
         logging.error(f"Typeform returned {r.status_code} when trying to download image for file_url={file_url}")
     return r.content
 
+def typeform_get_responses(num_results: int = 1000):
+    typeform = Typeform(TYPEFORM_TOKEN)
+
+    with open('last_uploaded_token.txt') as token_file:
+        last_uploaded_token = token_file.read().strip()
+    
+    responses_dict = typeform.responses.list(TYPEFORM_FORM_ID, pageSize=num_results, after= last_uploaded_token)
+    return responses_dict['items']
+
+def create_swap_product_from_response(answers):
+
+    image_fields = {FRONT_IMAGE_FIELD_ID, BACK_IMAGE_FIELD_ID, SIDE_IMAGE_FIELD_ID, VENDOR_IMAGE_FIELD_ID, IMPERFECTIONS_IMAGE_FIELD_ID}
+     
+    swap_product = SwapProduct()
+    
+    for answer in answers:
+        
+        field_id = answer['field']['id']
+        
+        if field_id in image_fields:
+            file_url = answer['file_url']
+            logging.info(f'Downloading image')
+            image = download_typeform_image(file_url)
+
+            if field_id == FRONT_IMAGE_FIELD_ID:
+                swap_product.set_front_image(image)
+            elif field_id == BACK_IMAGE_FIELD_ID:
+                swap_product.set_back_image(image)
+            elif field_id == SIDE_IMAGE_FIELD_ID:
+                swap_product.set_side_image(image)
+            elif field_id == VENDOR_IMAGE_FIELD_ID:
+                swap_product.set_brand_image(image)
+            elif field_id == IMPERFECTIONS_IMAGE_FIELD_ID:
+                swap_product.set_imperfections_image(image)
+
+        elif field_id == BRAND_FIELD_ID:
+            swap_product.brand = answer['text']
+        elif field_id == ADJECTIVE_FIELD_ID:
+            swap_product.adjective = answer['text']
+        elif field_id == ITEM_TYPE_FIELD_ID:
+            swap_product.item_type = answer['choice']['label']
+        elif field_id == CONDITION_FIELD_ID:
+            swap_product.condition = answer['choice']['label']
+        elif field_id == SIZE_FIELD_ID:
+            swap_product.size = answer['choice']['label']
+        elif field_id == EMAIL_FIELD_ID:
+            swap_product.email = answer['email']
+        elif field_id == ADDITIONAL_TEXT_FIELD_ID:
+            swap_product.additional_text = answer['text']
+            logging.info(swap_product.additional_text)
+        elif field_id == TAGS_FIELD_ID:
+            swap_product.extra_tags = [tag.strip().lower() for tag in answer['text'].split(',')]
+        else:
+            if field_id == 'ff6s76tc2lzC':  # 'Want to add another item'
+                continue
+            logging.error(f'Add a new field id: {field_id}, {json.dumps(answer)}')
+    
+    return swap_product
+    
+
 
 def typeform_swap_products(num_results: int = 1000):
     typeform = Typeform(TYPEFORM_TOKEN)
@@ -249,21 +310,28 @@ def typeform_swap_products(num_results: int = 1000):
 
         yield response['token'], swap_product
 
-
 def main():
-    logging.basicConfig(filename='logs.txt', filemode='a')
+    logging.basicConfig(filename='logs/logs.txt', filemode='a')
     logging.root.setLevel(logging.INFO)
-    logging.info('Typeform uploader script started')
+    logging.info(f'Typeform uploader script started at {datetime.now()}')
 
-    for token, product in typeform_swap_products():
+    responses = typeform_get_responses()
+    if not responses:
+        print("No new responses")
+        exit(0)
+
+    for response in tqdm((responses)):
+        
+        logging.info(f"'Parsing response submitted at {response['submitted_at']}', response token {response['token']}")
+        swap_product = create_swap_product_from_response(response['answers'])
+
         # coin_price = calc_coin_price(brand, item_type)
         coin_price = 50
         price = calc_price_from_coins(coin_price)
-
-        upload_product(token, product, coin_price, price)
-
-        # break
-
+        
+        upload_product(response['token'], swap_product, coin_price, price)
+    
+    logging.info(f"Uploader script completed at {datetime.now()}")
 
 if __name__ == '__main__':
     main()

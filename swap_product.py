@@ -1,55 +1,6 @@
-import io
 import logging
 from typing import Optional, List, Set
-
-import PIL
-import requests
-from PIL import Image
-
-REMOVE_BG_TOKEN = 'Q1opKLc9VgX59WX8WbF7ztjf'
-
-
-def crop(image_data: bytes, preview=False) -> bytes:
-    if not image_data:
-        logging.error('Trying to crop empty image')
-    try:
-        image = Image.open(io.BytesIO(image_data))
-    except PIL.UnidentifiedImageError:
-        logging.warning("Couldn't crop: PIL.UnidentifiedImageError")
-        return image_data
-    width, height = image.size
-    new_size = (400, 650) if preview else (1600, 2000)
-    if width > height:
-        new_size = new_size[1], new_size[0]
-    image.thumbnail(new_size)
-    exif = image.info['exif'] if 'exif' in image.info else None
-    byte_array = io.BytesIO()
-    if exif:
-        image.save(byte_array, format=image.format, exif=exif)
-    else:
-        image.save(byte_array, format=image.format)
-    logging.info(f'Successfully cropped, image format: {image.format}')
-    return byte_array.getvalue()
-
-
-def remove_background(image: bytes) -> bytes:
-    # return image  # saving quota
-
-    # NB: removes EXIF tags and other image meta-data
-    #Commented out just to be safe
-    # response = requests.post(
-    #     'https://api.remove.bg/v1.0/removebg',
-    #     files={'image_file': io.BytesIO(image)},
-    #     data={'size': 'auto'},
-    #     headers={'X-Api-Key': REMOVE_BG_TOKEN},
-    # )
-    if response.status_code == requests.codes.ok:
-        logging.info(f'Successfully removed background')
-        return response.content
-    else:
-        logging.error(f"Remove background error: {response.status_code}, {response.text}")
-        return image
-
+from imageManipulate import remove_background, crop
 
 class SwapProduct:
     ITEM_TYPE_TO_WEIGHT = {  # in lb
@@ -99,7 +50,7 @@ class SwapProduct:
             return None
         self._added_originals.add(image)
         image = crop(image)
-        #image = remove_background(image)
+        image = remove_background(image)
         return image
 
     def set_front_image(self, image: bytes):
