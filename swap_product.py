@@ -36,12 +36,13 @@ def remove_background(image: bytes) -> bytes:
     # return image  # saving quota
 
     # NB: removes EXIF tags and other image meta-data
-    response = requests.post(
-        'https://api.remove.bg/v1.0/removebg',
-        files={'image_file': io.BytesIO(image)},
-        data={'size': 'auto'},
-        headers={'X-Api-Key': REMOVE_BG_TOKEN},
-    )
+    #Commented out just to be safe
+    # response = requests.post(
+    #     'https://api.remove.bg/v1.0/removebg',
+    #     files={'image_file': io.BytesIO(image)},
+    #     data={'size': 'auto'},
+    #     headers={'X-Api-Key': REMOVE_BG_TOKEN},
+    # )
     if response.status_code == requests.codes.ok:
         logging.info(f'Successfully removed background')
         return response.content
@@ -98,7 +99,7 @@ class SwapProduct:
             return None
         self._added_originals.add(image)
         image = crop(image)
-        image = remove_background(image)
+        #image = remove_background(image)
         return image
 
     def set_front_image(self, image: bytes):
