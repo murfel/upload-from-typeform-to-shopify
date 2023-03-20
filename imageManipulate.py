@@ -4,34 +4,56 @@ import logging
 import PIL
 from PIL import Image, ExifTags
 
+import PIL
+import requests
+from PIL import Image
+
+REMOVE_BG_TOKEN = 'Q1opKLc9VgX59WX8WbF7ztjf'
 
 def remove_background(image: bytes) -> bytes:
+    # return image  # saving quota
 
-    input = Image.open(io.BytesIO(image))
-    output = remove(input)
+    # NB: removes EXIF tags and other image meta-data
+    response = requests.post(
+        'https://api.remove.bg/v1.0/removebg',
+        files={'image_file': io.BytesIO(image)},
+        data={'size': 'auto'},
+        headers={'X-Api-Key': REMOVE_BG_TOKEN},
+    )
+    if response.status_code == requests.codes.ok:
+        logging.info(f'Successfully removed background')
+        return response.content
+    else:
+        logging.error(f"Remove background error: {response.status_code}, {response.text}")
+        return image
 
-    #correct orientation in case it's changed
-    orientation = 274
-    for key in ExifTags.TAGS.keys():
-        if ExifTags.TAGS[key]=='Orientation':
-            orientation = key
-            break
+# def remove_background(image: bytes) -> bytes:
+
+#     input = Image.open(io.BytesIO(image))
+#     output = remove(input)
+
+#     #correct orientation in case it's changed
+#     orientation = 274
+#     for key in ExifTags.TAGS.keys():
+#         if ExifTags.TAGS[key]=='Orientation':
+#             orientation = key
+#             break
         
-    exif = input.getexif()
+#     exif = input.getexif()
 
-    if exif[orientation] == 3:
-        output=output.rotate(180, expand=True)
-    elif exif[orientation] == 6:
-        output=output.rotate(270, expand=True)
-    elif exif[orientation] == 8:
-        output=output.rotate(90, expand=True)
+#     if exif[orientation] == 3:
+#         output=output.rotate(180, expand=True)
+#     elif exif[orientation] == 6:
+#         output=output.rotate(270, expand=True)
+#     elif exif[orientation] == 8:
+#         output=output.rotate(90, expand=True)
 
-    buffer = io.BytesIO()
-    output.save(buffer, format='PNG', optimize=True)
-    logging.info(f'Successfully removed background')
+#     buffer = io.BytesIO()
+#     output.save(buffer, format='PNG', optimize=True)
+#     logging.info(f'Successfully removed background')
 
 
-    return buffer.getvalue()
+#     return buffer.getvalue()
 
 
 
