@@ -1,3 +1,4 @@
+import os
 from rembg import remove
 import io
 import logging
@@ -11,7 +12,11 @@ from PIL import Image
 REMOVE_BG_TOKEN = 'Q1opKLc9VgX59WX8WbF7ztjf'
 
 def remove_background(image: bytes) -> bytes:
-    # return image  # saving quota
+    is_test = os.path.exists('.TEST')
+
+    if (is_test):
+        print(f"IS_TEST IS {is_test}")
+        return image  # saving quota
 
     # NB: removes EXIF tags and other image meta-data
     response = requests.post(

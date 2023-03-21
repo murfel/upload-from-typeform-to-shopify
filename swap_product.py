@@ -33,13 +33,15 @@ class SwapProduct:
         self._size_image: Optional[bytes] = None
         self._brand_image: Optional[bytes] = None
         self._imperfections_image: Optional[bytes] = None
-
+        self._is_p2p = False
+        
         self.brand = 'Unbranded'
         self.adjective = ''
         self.item_type = ''
         self.condition = ''
         self.size = ''
         self.extra_tags: List[str] = []
+        
 
         self.email: Optional[str] = None
         self.additional_text: str = ''
@@ -83,8 +85,11 @@ class SwapProduct:
         return images
 
     def is_p2p(self) -> bool:
-        return False
+        return self._is_p2p
         return bool(self.email)
+
+    def set_is_p2p(self, is_p2p):
+        self._is_p2p = is_p2p
 
     def get_weight(self):
         weight_lb = SwapProduct.DEFAULT_WEIGHT
