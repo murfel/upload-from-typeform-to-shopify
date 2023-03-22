@@ -1,5 +1,5 @@
 import os
-from rembg import remove
+#from rembg import remove
 import io
 import logging
 import PIL
