@@ -112,11 +112,11 @@ class SwapProduct:
             item_type = 'Accessories'
 
         size_letters = ''
-        if '=' not in self.size:
+        if '=' not in self.size and not self.is_p2p():
             size_letters = 'One Size'
         else:
             size_letters = self.size.split(' =')[0]  # XS = UK 6-8
 
         return ', '.join(
-            ['all', self.brand.lower(), item_type.lower(), size_letters] + self.extra_tags +
+            ['all', self.brand.lower() if self.is_p2p() else '', item_type.lower(), size_letters] + self.extra_tags +
             (['p2p'] if self.is_p2p() else []))

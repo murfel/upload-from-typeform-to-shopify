@@ -13,18 +13,17 @@ def pp(json_str):
 
 def test():
     
-    open('.TEST', 'w').close()
 
     typeformHandler = TypeformHandler(form_type) 
     responses = typeformHandler.typeform_get_responses()
     print((responses[0]))
-    # print(len(responses))
+    print(len(responses))
     exit(0)
     #os.unlink('.TEST')
 
-    with shopify.Session.temp(SHOP_URL, API_VERSION, ACCESS_TOKEN):
-        user = shopify.Customer.search(query='email:akhil.hardys@gmail.com', fields='id, first_name, last_name')
-        print(user[0].id)
+    #with shopify.Session.temp(SHOP_URL, API_VERSION, ACCESS_TOKEN):
+    #    user = shopify.Customer.search(query='email:akhil.hardys@gmail.com', fields='id, first_name, last_name')
+    #    print(user[0].id)
             
 
 form_type = TypeformHandler.USER_FORM

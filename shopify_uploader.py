@@ -28,7 +28,10 @@ class ShopifyUploader:
 
          # coin_price = calc_coin_price(brand, item_type)
 
-        coin_price = 50
+        if not product.is_p2p():
+            coin_price = 50
+        else: 
+            coin_price = 0
         price = self.calc_price_from_coins(coin_price)
 
         title = ''
@@ -111,32 +114,38 @@ class ShopifyUploader:
                     file.write(token)
 
             # Add metafields.
-            coin_price_metafield = shopify.Metafield.create(
-                {'namespace': 'global', 'key': 'coin_price', 'value': coin_price,
-                'type': 'number_integer', 'owner_id': product.id, 'owner_resource': 'product'})
+            if not is_p2p:
+                coin_price_metafield = shopify.Metafield.create(
+                    {'namespace': 'global', 'key': 'coin_price', 'value': coin_price,
+                    'type': 'number_integer', 'owner_id': product.id, 'owner_resource': 'product'})
 
-            coin_price_type_metafield = shopify.Metafield.create(
-                {'namespace': 'global', 'key': 'coin_price_type', 'value': 'purple',
-                'type': 'single_line_text_field', 'owner_id': product.id, 'owner_resource': 'product'})
+                coin_price_type_metafield = shopify.Metafield.create(
+                    {'namespace': 'global', 'key': 'coin_price_type', 'value': 'purple',
+                    'type': 'single_line_text_field', 'owner_id': product.id, 'owner_resource': 'product'})
 
-            peer_to_peer_metafield = shopify.Metafield.create(
-                {'namespace': 'custom', 'key': 'peer_to_peer', 'value': is_p2p,
-                'type': 'boolean', 'owner_id': product.id, 'owner_resource': 'product'})
+                peer_to_peer_metafield = shopify.Metafield.create(
+                    {'namespace': 'custom', 'key': 'peer_to_peer', 'value': is_p2p,
+                    'type': 'boolean', 'owner_id': product.id, 'owner_resource': 'product'})
 
-            if coin_price_metafield.errors.errors or coin_price_type_metafield.errors.errors \
+                if coin_price_metafield.errors.errors or coin_price_type_metafield.errors.errors \
                     or peer_to_peer_metafield.errors.errors:
-                logging.info(f'Metafield creation errors: {coin_price_metafield.errors.errors}, '
+                    logging.info(f'Metafield creation errors: {coin_price_metafield.errors.errors}, '
                             f'\n{coin_price_type_metafield.errors.errors},'
                             f'\n{peer_to_peer_metafield.errors.errors}')
-            else:
-                logging.info(f'Metafields created: {coin_price_metafield.id}, {coin_price_type_metafield.id}, '
+                else:
+                    logging.info(f'Metafields created: {coin_price_metafield.id}, {coin_price_type_metafield.id}, '
                             f'{peer_to_peer_metafield.id}')
+
+            else:
+                peer_to_peer_metafield = shopify.Metafield.create({'namespace': 'custom', 'key': 'peer_to_peer', 'value': is_p2p,'type': 'boolean', 'owner_id': product.id, 'owner_resource': 'product'})
+
+
             
             if (is_p2p):
 
                 owner = shopify.Customer.search(query=f'email:{owner_email}', fields='id, first_name, last_name')
                 if (not owner):
-                    f = open('no_account_found.txt', 'w')
+                    f = open('no_account_found.txt', 'a')
                     f.write(owner_email)
                     logging.error(f'Owner with {owner_email} not found.')
                 else:
